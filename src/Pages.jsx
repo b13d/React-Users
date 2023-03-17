@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "./Pages.scss";
 
 async function setPages(url) {
@@ -16,13 +17,17 @@ async function setPages(url) {
   }
 }
 
-export default function Pages(props) {
+function Pages(props) {
   const [listPages, setListPages] = useState([]); // переменная хранящая текущее кол-во записей пользователей
   const [currentUrl, setUrl] = useState("");
+  const [numberPages, setNumberPages] = useState("");
+  const [currentNumber, setNumberPage] = useState("");
 
-  props.url !== undefined ? setUrl(props.url) : ""
-  
-  console.log("aasdsa")
+  props.url !== undefined ? setUrl(props.url) : "";
+
+  console.log("main component");
+  console.log(currentNumber);
+
   let arrPages = [];
 
   const handleClickUser = (id) => {
@@ -31,8 +36,9 @@ export default function Pages(props) {
 
   useEffect(() => {
     if (currentUrl !== "") {
-      setPages().then((data) => {
+      setPages(currentUrl).then((data) => {
         let arr = [];
+        let arrBig = [];
 
         for (let i = 0; i < data.length; i++) {
           arr.push(
@@ -60,38 +66,79 @@ export default function Pages(props) {
               <p className="tdUser">{data[i].phone}</p>
             </div>
           );
+          if (arr.length % 50 === 0 && arr.length > 0) {
+            arrBig.push(arr.slice(0));
+            arr.length = 0;
+          }
         }
 
+        console.log(arrBig);
+
+        if (arrBig.length > 0) {
+          let tempNumberPages = [];
+
+          for (let i = 1; i <= arrBig.length; i++) {
+            tempNumberPages.push(
+              <Link key={i} onClick={() => handleClickNumberPage(i)} to="">
+                {i}
+              </Link>
+            );
+          }
+          setNumberPages(tempNumberPages);
+          setNumberPage((value) => {
+            if (value === "") {
+              return 0;
+            }
+          });
+        }
         // console.log(arr);
-        setListPages(arr);
+        setListPages(arrBig.length > 0 ? arrBig : [arr]);
       });
     }
   }, [currentUrl]);
 
   // console.log(listPages);
 
-  return;
+  const handleClickNumberPage = (id) => {
+    setNumberPage(id - 1);
+  };
 
-  {
-    /* {ResultPages()}
-      {listPages} */
-  }
+  console.log(listPages);
+  console.log(listPages.length);
+  // console.log(listPages[currentNumber]);
+  return (
+    <>
+      <div className="chose">
+        Выберите кол-во пользователей:
+        <button
+          onClick={() => SmallUsers(setUrl, setNumberPages, setNumberPage)}
+          className="btn-chose"
+        >
+          32 пользователя
+        </button>
+        <button onClick={() => BigUsers(setUrl)} className="btn-chose">
+          1000 пользователей
+        </button>
+      </div>
+      {listPages.length > 1 ? listPages[currentNumber] : listPages}
+      <div className="numbers-page">{numberPages}</div>
+    </>
+  );
 }
 
-export function SmallUsers() {
+export function SmallUsers(setUrl, setNumberPages, setNumberPage) {
+  setNumberPages("");
+  setNumberPage("");
   let url =
     "http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D";
-  setPages(url);
-  <Pages url="aaa"/>
-  // setUrl(url);
+  setUrl(url);
   console.log("мало");
 }
 
-export function BigUsers() {
+export function BigUsers(setUrl) {
   let url =
     "http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D";
-  setPages(url);
-  // setUrl(url);
+  setUrl(url);
   console.log("много");
 }
 
@@ -119,6 +166,8 @@ function ResultPages(props) {
     </>
   );
 }
+
+export default Pages;
 // +------+------------+-----------------+-----------------+---------------+
 // | id   | firstName  | lastName        | email           | phone         |
 // +------+------------+-----------------+-----------------+---------------+

@@ -6,6 +6,12 @@
   font-weight: 500;
 }
 
+a {
+  text-decoration: none;
+  color: black;
+}
+
+
 .grid-main {
   margin: 0 auto;
   width: 620px;
@@ -63,4 +69,10 @@ tfoot {
 .btn-chose {
   width: 150px;
   padding: 5px 10px;
+}
+
+.numbers-page {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
