@@ -22,6 +22,10 @@ function Pages(props) {
   const [currentUrl, setUrl] = useState("");
   const [numberPages, setNumberPages] = useState("");
   const [currentNumber, setNumberPage] = useState("");
+  const [classGif, setClassGif] = useState({
+    width: 120 + "px",
+    display: "none",
+  });
 
   props.url !== undefined ? setUrl(props.url) : "";
 
@@ -97,6 +101,14 @@ function Pages(props) {
     }
   }, [currentUrl]);
 
+  useEffect(() => {
+    if (listPages.length > 0) {
+      setClassGif({
+        width: 120 + "px",
+        display: "none",
+      });
+    }
+  }, [listPages]);
   // console.log(listPages);
 
   const handleClickNumberPage = (id) => {
@@ -106,19 +118,32 @@ function Pages(props) {
   console.log(listPages);
   console.log(listPages.length);
   // console.log(listPages[currentNumber]);
+
   return (
     <>
       <div className="chose">
         Выберите кол-во пользователей:
         <button
-          onClick={() => SmallUsers(setUrl, setNumberPages, setNumberPage)}
+          onClick={() =>
+            SmallUsers(
+              setUrl,
+              setNumberPages,
+              setNumberPage,
+              setListPages,
+              setClassGif
+            )
+          }
           className="btn-chose"
         >
           32 пользователя
         </button>
-        <button onClick={() => BigUsers(setUrl)} className="btn-chose">
+        <button
+          onClick={() => BigUsers(setUrl, setClassGif, setListPages)}
+          className="btn-chose"
+        >
           1000 пользователей
         </button>
+        <img style={classGif} src="/loaded.gif" alt="gif" />
       </div>
       {listPages.length > 1 ? listPages[currentNumber] : listPages}
       <div className="numbers-page">{numberPages}</div>
@@ -126,7 +151,20 @@ function Pages(props) {
   );
 }
 
-export function SmallUsers(setUrl, setNumberPages, setNumberPage) {
+export function SmallUsers(
+  setUrl,
+  setNumberPages,
+  setNumberPage,
+  setListPages,
+  setClassGif
+) {
+  setClassGif({
+    width: 120 + "px",
+    display: "block",
+  });
+
+  setListPages("");
+
   setNumberPages("");
   setNumberPage("");
   let url =
@@ -135,7 +173,14 @@ export function SmallUsers(setUrl, setNumberPages, setNumberPage) {
   console.log("мало");
 }
 
-export function BigUsers(setUrl) {
+export function BigUsers(setUrl, setClassGif, setListPages) {
+  setListPages("");
+
+  setClassGif({
+    width: 120 + "px",
+    display: "block",
+  });
+
   let url =
     "http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D";
   setUrl(url);
