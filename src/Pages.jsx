@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Pages.scss";
 
@@ -26,7 +26,9 @@ function Pages(props) {
     width: 120 + "px",
     display: "none",
   });
+  const [shiftState, setShiftState] = useState(true);
 
+  const refId = useRef("");
   props.url !== undefined ? setUrl(props.url) : "";
 
   console.log("main component");
@@ -47,7 +49,7 @@ function Pages(props) {
         for (let i = 0; i < data.length; i++) {
           arr.push(
             <div
-              onClick={() => handleClickUser(data[i].id)}
+              onClick={() => handleClickUser(i)}
               key={i}
               className="grid-main user"
             >
@@ -96,7 +98,8 @@ function Pages(props) {
           });
         }
         // console.log(arr);
-        setListPages(arrBig.length > 0 ? arrBig : [arr]);
+        setUrl("");
+        setListPages(arrBig.length > 0 ? arrBig : arr);
       });
     }
   }, [currentUrl]);
@@ -115,9 +118,135 @@ function Pages(props) {
     setNumberPage(id - 1);
   };
 
-  console.log(listPages);
-  console.log(listPages.length);
+  // console.log(listPages);
+  // console.log(listPages.length);
   // console.log(listPages[currentNumber]);
+
+  async function handleClickColumn(e, idColumn) {
+    let counter = 0;
+    let shift = true;
+    const arr = [];
+    let oldArr = listPages;
+    let arrStack = [];
+    let arrAll = [];
+
+    let temp = "";
+
+    if (idColumn === 0) {
+      temp = e.target.innerHTML === "id ▼" ? "id ▲" : "id ▼";
+      e.target.innerHTML = temp;
+    } else if (idColumn === 1) {
+      let temp =
+        e.target.innerHTML === "firstName ▼" ? "firstName ▲" : "firstName ▼";
+      e.target.innerHTML = temp;
+    } else if (idColumn === 2) {
+      let temp =
+        e.target.innerHTML === "lastName ▼" ? "lastName ▲" : "lastName ▼";
+      e.target.innerHTML = temp;
+    } else if (idColumn === 3) {
+      let temp = e.target.innerHTML === "email ▼" ? "email ▲" : "email ▼";
+      e.target.innerHTML = temp;
+    } else if (idColumn === 4) {
+      let temp = e.target.innerHTML === "phone ▼" ? "phone ▲" : "phone ▼";
+      e.target.innerHTML = temp;
+    }
+
+    // while (shift) {
+    // цикл для возрастания / убывания
+
+    // console.log(currentNumber);
+
+    if (oldArr[0].length !== undefined) {
+      let variableArr = oldArr;
+
+      for (let j = 0; j < oldArr.length; j++) {
+        for (let i = 0; i < variableArr[j].length; i++) {
+          if (shiftState) {
+            if (
+              variableArr[j][i + 1] !== undefined &&
+              variableArr[j][i].props.children[idColumn].props.children >
+                variableArr[j][i + 1].props.children[idColumn].props.children
+            ) {
+              arr.push(variableArr[j][i + 1]);
+              arr.push(variableArr[j][i]);
+              counter++;
+              i++;
+            } else arr.push(variableArr[j][i]);
+          } else {
+            if (
+              variableArr[j][i + 1] !== undefined &&
+              variableArr[j][i].props.children[idColumn].props.children <
+                variableArr[j][i + 1].props.children[idColumn].props.children
+            ) {
+              arr.push(variableArr[j][i + 1]);
+              arr.push(variableArr[j][i]);
+              counter++;
+              i++;
+            } else arr.push(variableArr[j][i]);
+          }
+        }
+
+        if (arr.length === variableArr[j].length) {
+          if (counter !== 0) {
+            variableArr[j] = Array.from(arr);
+            arr.length = 0;
+            j = j - 1;
+          } else {
+            setListPages("");
+
+            setTimeout(() => {
+              console.log("Перезагрузил таблицу");
+              setListPages(variableArr);
+            }, 1);
+            arr.length = 0;
+
+            if (j + 1 === oldArr.length) {
+              setShiftState((value) => !value);
+            }
+          }
+        }
+        counter = 0;
+      }
+    } else {
+      while (shift) {
+        for (let i = 0; i < oldArr.length; i++) {
+          if (shiftState) {
+            if (
+              oldArr[i + 1] !== undefined &&
+              oldArr[i].props.children[idColumn].props.children >
+                oldArr[i + 1].props.children[idColumn].props.children
+            ) {
+              arr.push(oldArr[i + 1]);
+              arr.push(oldArr[i]);
+              counter++;
+              i++;
+            } else arr.push(oldArr[i]);
+          } else {
+            if (
+              oldArr[i + 1] !== undefined &&
+              oldArr[i].props.children[idColumn].props.children <
+                oldArr[i + 1].props.children[idColumn].props.children
+            ) {
+              arr.push(oldArr[i + 1]);
+              arr.push(oldArr[i]);
+              counter++;
+              i++;
+            } else arr.push(oldArr[i]);
+          }
+
+          // console.log(counter);
+        }
+        if (counter === 0) {
+          setShiftState((value) => !value);
+          shift = false;
+        }
+        counter = 0;
+        oldArr = Array.from(arr);
+        arr.length = 0;
+        setListPages(oldArr);
+      }
+    }
+  }
 
   return (
     <>
@@ -138,14 +267,54 @@ function Pages(props) {
           32 пользователя
         </button>
         <button
-          onClick={() => BigUsers(setUrl, setClassGif, setListPages)}
+          onClick={() =>
+            BigUsers(
+              setUrl,
+              setClassGif,
+              setListPages,
+              setNumberPages,
+              setNumberPage
+            )
+          }
           className="btn-chose"
         >
           1000 пользователей
         </button>
+        <div className="grid-main user">
+          <p
+            onClick={(e) => handleClickColumn(e, 0)}
+            className="tdUser idUser__title"
+          >
+            id ▼
+          </p>
+          <p
+            onClick={(e) => handleClickColumn(e, 1)}
+            className="tdUser idUser__title"
+          >
+            firstName ▼
+          </p>
+          <p
+            onClick={(e) => handleClickColumn(e, 2)}
+            className="tdUser idUser__title"
+          >
+            lastName ▼
+          </p>
+          <p
+            onClick={(e) => handleClickColumn(e, 3)}
+            className="tdUser idUser__title"
+          >
+            email ▼
+          </p>
+          <p
+            onClick={(e) => handleClickColumn(e, 4)}
+            className="tdUser idUser__title"
+          >
+            phone ▼
+          </p>
+        </div>
         <img style={classGif} src="/loaded.gif" alt="gif" />
       </div>
-      {listPages.length > 1 ? listPages[currentNumber] : listPages}
+      {currentNumber !== "" ? listPages[currentNumber] : listPages}
       <div className="numbers-page">{numberPages}</div>
     </>
   );
@@ -170,11 +339,19 @@ export function SmallUsers(
   let url =
     "http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D";
   setUrl(url);
-  console.log("мало");
+  // console.log("мало");
 }
 
-export function BigUsers(setUrl, setClassGif, setListPages) {
+export function BigUsers(
+  setUrl,
+  setClassGif,
+  setListPages,
+  setNumberPages,
+  setNumberPage
+) {
   setListPages("");
+  setNumberPages("");
+  setNumberPage("");
 
   setClassGif({
     width: 120 + "px",
@@ -184,32 +361,7 @@ export function BigUsers(setUrl, setClassGif, setListPages) {
   let url =
     "http://www.filltext.com/?rows=1000&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&delay=3&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D";
   setUrl(url);
-  console.log("много");
-}
-
-function ResultPages(props) {
-  return (
-    <>
-      <h1 className="title-table-users">Список людей</h1>
-      <div className="grid-main">
-        <a className="grid-main__link" href="#">
-          id
-        </a>
-        <a className="grid-main__link" href="#">
-          firstName
-        </a>
-        <a className="grid-main__link" href="#">
-          lastName
-        </a>
-        <a className="grid-main__link" href="#">
-          Email
-        </a>
-        <a className="grid-main__link" href="#">
-          Phone
-        </a>
-      </div>
-    </>
-  );
+  // console.log("много");
 }
 
 export default Pages;
