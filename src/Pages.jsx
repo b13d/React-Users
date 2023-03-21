@@ -10,7 +10,9 @@ async function setPages(url) {
 
   if (url !== undefined) {
     await fetch(url)
-      .then((response) => response.json())
+      .then((response) => {
+        return response.json();
+      })
       .then((json) => (temp = json));
 
     return temp;
@@ -26,59 +28,152 @@ function Pages(props) {
     width: 120 + "px",
     display: "none",
   });
+  const [showAboutUser, setShowAboutUser] = useState({
+    display: "none",
+    textAlign: "center",
+  });
+  const [showAddFormUser, setShowAddFormUser] = useState({
+    display: "none",
+    textAlign: "center",
+  });
+  const [userInfo, setUserInfo] = useState({});
   const [shiftState, setShiftState] = useState(true);
+  const [lastId, setLastId] = useState(1001);
 
   const refId = useRef("");
-  props.url !== undefined ? setUrl(props.url) : "";
-
-  console.log("main component");
-  console.log(currentNumber);
+  const refFirstName = useRef("");
+  const refLastName = useRef("");
+  const refEmail = useRef("");
+  const refPhone = useRef("");
+  // props.url !== undefined ? setUrl(props.url) : "";
 
   let arrPages = [];
 
-  const handleClickUser = (id) => {
-    console.log("Нажали на пользователя: " + id);
-  };
+  async function handleClickAddUser(e) {
+    e.preventDefault();
+
+
+    if (
+      refFirstName.current.value !== "" &&
+      refLastName.current.value !== "" &&
+      refEmail.current.value !== "" &&
+      refPhone.current.value !== ""
+    ) {
+      let newUser = [];
+
+      newUser.push({
+        id: lastId,
+        firstName: refFirstName.current.value,
+        lastName: refLastName.current.value,
+        email: refEmail.current.value,
+        phone: refPhone.current.value,
+      });
+
+      console.log(refFirstName.current.value);
+      console.log(newUser);
+
+      console.log(listPages)
+
+      let tempValue = "";
+
+      await setListPages((value) => {
+        tempValue = [...value];
+        console.log("начало")
+
+        if (currentNumber !== "") {
+           tempValue[currentNumber].unshift(newUser[0]);
+           console.log("sadsadsad")
+        } else tempValue.unshift(newUser[0]);
+      });
+
+      console.log(tempValue)
+      debugger
+      setListPages(tempValue)
+
+      // setListPages((value) => {
+      //   let tempValue = [...value];
+      //   if (currentNumber !== "") {
+      //     tempValue[currentNumber].unshift(newUser[0]);
+      //   } else tempValue.unshift(newUser[0]);
+      //   console.log(tempValue);
+      //   return tempValue;
+      // });
+      setLastId((value) => value + 1);
+    } else {
+      alert("Вы ввели не все значения!!!");
+      setShowAddFormUser({
+        display: "none",
+        textAlign: "center",
+      });
+    }
+
+    // console.log(listPages)
+  }
+
+  async function handleClickUser(e, idUser) {
+    let currentNumber = "";
+
+    setShowAboutUser({
+      display: "block",
+      textAlign: "center",
+    });
+    await setNumberPage((value) => {
+      currentNumber = value;
+      return value;
+    });
+
+    let userInfo = {};
+
+    setListPages((value) => {
+      if (Array.isArray(value[0])) {
+        let valueUser = value[currentNumber][idUser];
+        userInfo = {
+          description: valueUser.description,
+          firstName: valueUser.firstName,
+          lastName: valueUser.lastName,
+          streetAddress: valueUser.address.streetAddress,
+          city: valueUser.address.city,
+          state: valueUser.address.state,
+          zip: valueUser.address.zip,
+        };
+        setUserInfo(userInfo);
+      } else {
+        let valueUser = value[idUser];
+        userInfo = {
+          description: valueUser.description,
+          firstName: valueUser.firstName,
+          lastName: valueUser.lastName,
+          streetAddress: valueUser.address.streetAddress,
+          city: valueUser.address.city,
+          state: valueUser.address.state,
+          zip: valueUser.address.zip,
+        };
+        setUserInfo(userInfo);
+      }
+      return value;
+    });
+
+    console.log(currentNumber);
+    console.log("Нажали на пользователя: " + idUser);
+  }
 
   useEffect(() => {
     if (currentUrl !== "") {
+      console.log("aAa");
       setPages(currentUrl).then((data) => {
         let arr = [];
         let arrBig = [];
 
+        // console.log(data.length);
+
         for (let i = 0; i < data.length; i++) {
-          arr.push(
-            <div
-              onClick={() => handleClickUser(i)}
-              key={i}
-              className="grid-main user"
-            >
-              <p className="tdUser">{data[i].id}</p>
-              <p className="tdUser">
-                {data[i].firstName.length > 10
-                  ? data[i].firstName.substring(0, 10) + "..."
-                  : data[i].firstName}
-              </p>
-              <p className="tdUser">
-                {data[i].lastName.length > 10
-                  ? data[i].lastName.substring(0, 10) + "..."
-                  : data[i].lastName}
-              </p>
-              <p className="tdUser">
-                {data[i].email.length > 20
-                  ? data[i].email.substring(0, 20) + "..."
-                  : data[i].email}
-              </p>
-              <p className="tdUser">{data[i].phone}</p>
-            </div>
-          );
+          arr.push(data[i]);
+          // console.log(arr);
           if (arr.length % 50 === 0 && arr.length > 0) {
             arrBig.push(arr.slice(0));
             arr.length = 0;
           }
         }
-
-        console.log(arrBig);
 
         if (arrBig.length > 0) {
           let tempNumberPages = [];
@@ -105,11 +200,13 @@ function Pages(props) {
   }, [currentUrl]);
 
   useEffect(() => {
-    if (listPages.length > 0) {
-      setClassGif({
-        width: 120 + "px",
-        display: "none",
-      });
+    if (listPages !== undefined) {
+      if (listPages.length > 0) {
+        setClassGif({
+          width: 120 + "px",
+          display: "none",
+        });
+      }
     }
   }, [listPages]);
   // console.log(listPages);
@@ -117,10 +214,6 @@ function Pages(props) {
   const handleClickNumberPage = (id) => {
     setNumberPage(id - 1);
   };
-
-  // console.log(listPages);
-  // console.log(listPages.length);
-  // console.log(listPages[currentNumber]);
 
   async function handleClickColumn(e, idColumn) {
     let counter = 0;
@@ -132,29 +225,24 @@ function Pages(props) {
 
     let temp = "";
 
-    if (idColumn === 0) {
+    if (idColumn === "id") {
       temp = e.target.innerHTML === "id ▼" ? "id ▲" : "id ▼";
       e.target.innerHTML = temp;
-    } else if (idColumn === 1) {
+    } else if (idColumn === "firstName") {
       let temp =
         e.target.innerHTML === "firstName ▼" ? "firstName ▲" : "firstName ▼";
       e.target.innerHTML = temp;
-    } else if (idColumn === 2) {
+    } else if (idColumn === "lastName") {
       let temp =
         e.target.innerHTML === "lastName ▼" ? "lastName ▲" : "lastName ▼";
       e.target.innerHTML = temp;
-    } else if (idColumn === 3) {
+    } else if (idColumn === "email") {
       let temp = e.target.innerHTML === "email ▼" ? "email ▲" : "email ▼";
       e.target.innerHTML = temp;
-    } else if (idColumn === 4) {
+    } else if (idColumn === "phone") {
       let temp = e.target.innerHTML === "phone ▼" ? "phone ▲" : "phone ▼";
       e.target.innerHTML = temp;
     }
-
-    // while (shift) {
-    // цикл для возрастания / убывания
-
-    // console.log(currentNumber);
 
     if (oldArr[0].length !== undefined) {
       let variableArr = oldArr;
@@ -164,8 +252,7 @@ function Pages(props) {
           if (shiftState) {
             if (
               variableArr[j][i + 1] !== undefined &&
-              variableArr[j][i].props.children[idColumn].props.children >
-                variableArr[j][i + 1].props.children[idColumn].props.children
+              variableArr[j][i][idColumn] > variableArr[j][i + 1][idColumn]
             ) {
               arr.push(variableArr[j][i + 1]);
               arr.push(variableArr[j][i]);
@@ -175,8 +262,7 @@ function Pages(props) {
           } else {
             if (
               variableArr[j][i + 1] !== undefined &&
-              variableArr[j][i].props.children[idColumn].props.children <
-                variableArr[j][i + 1].props.children[idColumn].props.children
+              variableArr[j][i][idColumn] < variableArr[j][i + 1][idColumn]
             ) {
               arr.push(variableArr[j][i + 1]);
               arr.push(variableArr[j][i]);
@@ -213,8 +299,7 @@ function Pages(props) {
           if (shiftState) {
             if (
               oldArr[i + 1] !== undefined &&
-              oldArr[i].props.children[idColumn].props.children >
-                oldArr[i + 1].props.children[idColumn].props.children
+              oldArr[i][idColumn] > oldArr[i + 1][idColumn]
             ) {
               arr.push(oldArr[i + 1]);
               arr.push(oldArr[i]);
@@ -224,8 +309,7 @@ function Pages(props) {
           } else {
             if (
               oldArr[i + 1] !== undefined &&
-              oldArr[i].props.children[idColumn].props.children <
-                oldArr[i + 1].props.children[idColumn].props.children
+              oldArr[i][idColumn] < oldArr[i + 1][idColumn]
             ) {
               arr.push(oldArr[i + 1]);
               arr.push(oldArr[i]);
@@ -247,7 +331,6 @@ function Pages(props) {
       }
     }
   }
-
   return (
     <>
       <div className="chose">
@@ -259,7 +342,8 @@ function Pages(props) {
               setNumberPages,
               setNumberPage,
               setListPages,
-              setClassGif
+              setClassGif,
+              setShowAboutUser
             )
           }
           className="btn-chose"
@@ -273,40 +357,83 @@ function Pages(props) {
               setClassGif,
               setListPages,
               setNumberPages,
-              setNumberPage
+              setNumberPage,
+              setShowAboutUser
             )
           }
           className="btn-chose"
         >
           1000 пользователей
         </button>
+        <button
+          onClick={(e) => {
+            setShowAddFormUser((value) => {
+              e.preventDefault();
+              if (value.display === "none") {
+                return {
+                  display: "flex",
+                  flexDirection: "column",
+                  textAlign: "center",
+                  gap: 10 + "px",
+                };
+              } else {
+                return {
+                  display: "none",
+                  textAlign: "center",
+                };
+              }
+            });
+          }}
+          className="addUserBtn"
+        >
+          Добавить
+        </button>
+        <form action="" style={showAddFormUser}>
+          <label>firstName</label>
+          <input required ref={refFirstName} type="text" name="firstName" />
+          <label>lastName</label>
+          <input required ref={refLastName} type="text" name="lastName" />
+          <label>email</label>
+          <input required ref={refEmail} type="email" name="email" />
+          <label>phone</label>
+          <input required ref={refPhone} type="phone" name="phone" />
+          {/* <button type="button" className="addUserBtn" onClick={(e) => handleClickAddUser(e)}> */}
+          <input
+            type="submit"
+            className="addUserBtn"
+            value="Добавить нового пользователя"
+            onClick={handleClickAddUser}
+          />
+          {/* Добавить нового пользователя
+          </button> */}
+        </form>
         <div className="grid-main user">
           <p
-            onClick={(e) => handleClickColumn(e, 0)}
+            onClick={(e) => handleClickColumn(e, "id")}
             className="tdUser idUser__title"
           >
             id ▼
           </p>
           <p
-            onClick={(e) => handleClickColumn(e, 1)}
+            onClick={(e) => handleClickColumn(e, "firstName")}
             className="tdUser idUser__title"
           >
             firstName ▼
           </p>
           <p
-            onClick={(e) => handleClickColumn(e, 2)}
+            onClick={(e) => handleClickColumn(e, "lastName")}
             className="tdUser idUser__title"
           >
             lastName ▼
           </p>
           <p
-            onClick={(e) => handleClickColumn(e, 3)}
+            onClick={(e) => handleClickColumn(e, "email")}
             className="tdUser idUser__title"
           >
             email ▼
           </p>
           <p
-            onClick={(e) => handleClickColumn(e, 4)}
+            onClick={(e) => handleClickColumn(e, "phone")}
             className="tdUser idUser__title"
           >
             phone ▼
@@ -314,10 +441,102 @@ function Pages(props) {
         </div>
         <img style={classGif} src="/loaded.gif" alt="gif" />
       </div>
-      {currentNumber !== "" ? listPages[currentNumber] : listPages}
+      {listPages.length > 0
+        ? drawUsers(listPages, currentNumber, handleClickUser)
+        : ""}
+      {/* {currentNumber !== "" ? listPages[currentNumber] : listPages} */}
+      <form style={showAboutUser}>
+        <p>
+          Выбран пользователь:{userInfo.firstName + " " + userInfo.lastName}
+        </p>
+        <label>Описание:</label>
+        <textarea value={userInfo.description} />
+        <p>
+          Адрес проживания: <b>{userInfo.streetAddress}</b>
+        </p>
+        <p>
+          Город: <b>{userInfo.city}</b>
+        </p>
+        <p>
+          Провинция/штат: <b>{userInfo.state}</b>
+        </p>
+        <p>
+          Индекс: <b>{userInfo.zip}</b>
+        </p>
+      </form>
       <div className="numbers-page">{numberPages}</div>
     </>
   );
+}
+
+export function drawUsers(listPages, currentNumber, handleClickUser) {
+  let arrBody = [];
+  let allUsers = [];
+
+  if (listPages[0].length !== undefined) {
+    for (let j = 0; j < listPages.length; j++) {
+      for (let i = 0; i < listPages[j].length; i++) {
+        arrBody.push(
+          <div
+            onClick={(e) => handleClickUser(e, i)}
+            key={i}
+            className="grid-main user"
+          >
+            <p className="tdUser">{listPages[j][i].id}</p>
+            <p className="tdUser">
+              {listPages[j][i].firstName.length > 10
+                ? listPages[j][i].firstName.substring(0, 10) + "..."
+                : listPages[j][i].firstName}
+            </p>
+            <p className="tdUser">
+              {listPages[j][i].lastName.length > 10
+                ? listPages[j][i].lastName.substring(0, 10) + "..."
+                : listPages[j][i].lastName}
+            </p>
+            <p className="tdUser">
+              {listPages[j][i].email.length > 20
+                ? listPages[j][i].email.substring(0, 20) + "..."
+                : listPages[j][i].email}
+            </p>
+            <p className="tdUser">{listPages[j][i].phone}</p>
+          </div>
+        );
+      }
+      allUsers.push(Array.from(arrBody));
+      // console.log(allUsers);
+      arrBody.length = 0;
+    }
+  } else {
+    for (let i = 0; i < listPages.length; i++) {
+      arrBody.push(
+        <div
+          onClick={(e) => handleClickUser(e, i)}
+          key={i}
+          className="grid-main user"
+        >
+          <p className="tdUser">{listPages[i].id}</p>
+          <p className="tdUser">
+            {listPages[i].firstName.length > 10
+              ? listPages[i].firstName.substring(0, 10) + "..."
+              : listPages[i].firstName}
+          </p>
+          <p className="tdUser">
+            {listPages[i].lastName.length > 10
+              ? listPages[i].lastName.substring(0, 10) + "..."
+              : listPages[i].lastName}
+          </p>
+          <p className="tdUser">
+            {listPages[i].email.length > 20
+              ? listPages[i].email.substring(0, 20) + "..."
+              : listPages[i].email}
+          </p>
+          <p className="tdUser">{listPages[i].phone}</p>
+        </div>
+      );
+    }
+  }
+
+  return allUsers.length > 0 ? allUsers[currentNumber] : arrBody;
 }
 
 export function SmallUsers(
@@ -325,7 +544,8 @@ export function SmallUsers(
   setNumberPages,
   setNumberPage,
   setListPages,
-  setClassGif
+  setClassGif,
+  setShowAboutUser
 ) {
   setClassGif({
     width: 120 + "px",
@@ -336,6 +556,12 @@ export function SmallUsers(
 
   setNumberPages("");
   setNumberPage("");
+
+  setShowAboutUser({
+    display: "none",
+    textAlign: "center",
+  });
+
   let url =
     "http://www.filltext.com/?rows=32&id=%7Bnumber%7C1000%7D&firstName=%7BfirstName%7D&lastName=%7BlastName%7D&email=%7Bemail%7D&phone=%7Bphone%7C(xxx)xxx-xx-xx%7D&address=%7BaddressObject%7D&description=%7Blorem%7C32%7D";
   setUrl(url);
@@ -347,11 +573,17 @@ export function BigUsers(
   setClassGif,
   setListPages,
   setNumberPages,
-  setNumberPage
+  setNumberPage,
+  setShowAboutUser
 ) {
   setListPages("");
   setNumberPages("");
   setNumberPage("");
+
+  setShowAboutUser({
+    display: "none",
+    textAlign: "center",
+  });
 
   setClassGif({
     width: 120 + "px",
