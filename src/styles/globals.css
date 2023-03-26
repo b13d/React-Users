@@ -11,6 +11,11 @@ body {
   overflow-x: hidden;
 }
 
+a {
+  text-decoration: none;
+  color: black;
+}
+
 .error-message {
   color: red;
 }
@@ -45,4 +50,25 @@ button:hover {
   background-color: rgb(255, 255, 255);
   color: black;
   border: 1px solid rgb(0, 0, 0);
+}
+
+.number-pages {
+  display: flex;
+  justify-content: space-between;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+td {
+  padding: 5px 10px;
+  border: 1px dashed black;
+}
+
+.gif-loading {
+  width: 300px;
+}
+
+.div-gif {
+  display: flex;
+  justify-content: center;
 }
